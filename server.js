@@ -478,6 +478,16 @@ function serveStatic(req, res, urlPath) {
   if (!file.startsWith(base)) { res.writeHead(403); return res.end(); }
   fs.readFile(file, (err, buf) => {
     if (err) {
+      // Files uploaded without folders (all in one place)? Serve these safe files from the main folder.
+      const FLAT_OK = ['index.html', 'style.css', 'app.js', 'i18n.js', 'hero.svg', 'avatar.svg', 'logo.svg'];
+      const flatName = path.basename(file);
+      if (base === PUBLIC_DIR && FLAT_OK.includes(flatName) && !req._flat) {
+        const flatFile = path.join(__dirname, flatName);
+        if (fs.existsSync(flatFile)) {
+          res.writeHead(200, { 'Content-Type': MIME[path.extname(flatFile).toLowerCase()] || 'application/octet-stream' });
+          return res.end(fs.readFileSync(flatFile));
+        }
+      }
       if (base === PUBLIC_DIR && !path.extname(rel)) return serveStatic(req, res, '/'); // SPA fallback
       res.writeHead(404); return res.end('Not found');
     }

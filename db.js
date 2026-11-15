@@ -30,7 +30,8 @@ let mode = 'mysql';
 async function ensureSchema() {
   const conn = await mysql.createConnection({ ...CFG, multipleStatements: true, connectTimeout: 4000 });
   try {
-    const sql = fs.readFileSync(path.join(__dirname, 'database', 'ebuspass.sql'), 'utf8')
+    const sqlFile = [path.join(__dirname, 'database', 'ebuspass.sql'), path.join(__dirname, 'ebuspass.sql')].find(f => fs.existsSync(f));
+    const sql = fs.readFileSync(sqlFile, 'utf8')
       .replace(/^\s*(CREATE DATABASE|USE)\b.*$/gmi, '');
     await conn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci; USE \`${DB_NAME}\`;` + sql);
   } finally { await conn.end(); }
